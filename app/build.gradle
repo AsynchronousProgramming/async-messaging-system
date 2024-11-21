@@ -1,0 +1,48 @@
+plugins {
+    id 'application'
+    id 'jacoco'
+}
+
+group 'salesian.university'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation libs.guava
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+application {
+    mainClass = 'salesian.university.App'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        csv.required = false
+        html.required = true
+    }
+}
+
+javadoc {
+    source = sourceSets.main.allJava
+
+    destinationDir = file("build/docs/javadoc")
+    include 'salesian/university/**'
+}
