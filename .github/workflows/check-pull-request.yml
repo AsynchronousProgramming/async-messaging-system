@@ -49,7 +49,7 @@ jobs:
       - name: Run Tests using Gradle
         run: ./gradlew test --no-daemon
 
-  semantic_pull_request:
+  check_pull_request_convention:
     name: Check Conventional PR Title
     runs-on: ubuntu-latest
 
@@ -81,7 +81,7 @@ jobs:
           headerPatternCorrespondence: type, scope, subject
           validateSingleCommit: true
 
-  check_commit_messages:
+  check_commits_convention:
     name: Check Conventional Commits Message
     runs-on: ubuntu-latest
 
