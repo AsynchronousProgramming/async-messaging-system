@@ -14,10 +14,11 @@ public class TopicManager {
     }
 
     public void addSubscriber(String topic, String consumerUrl) {
-        if (!subscriptions.containsKey(topic.toLowerCase())) {
+        String topicLowerCase = topic.toLowerCase();
+        if (!subscriptions.containsKey(topicLowerCase)) {
             throw new IllegalArgumentException("Topic does not exist: " + topic);
         }
-        subscriptions.get(topic).add(consumerUrl);
+        subscriptions.get(topicLowerCase).add(consumerUrl);
     }
 
     public List<String> getSubscribers(String topic) {
