@@ -1,0 +1,62 @@
+@startuml "Async messaging system"
+!define ENTITY stereotype
+!define SERVICE stereotype
+
+package "Messaging System" {
+    class MessageBroker {
+        - server: HttpServer
+        - topicManager: TopicManager
+        - queueManager: QueueManager
+        - backpressureHandler: BackpressureHandler
+        + MessageBroker(topicManager: TopicManager, queueManager: QueueManager, backpressureHandler: BackpressureHandler)
+        + start(): void
+        + publish(topic: String, message: String): void
+        + subscribe(topic: String, consumerUrl: String): void
+    }
+
+    class Producer {
+        - server: HttpServer
+        - brokerUrl: String
+        + Producer(brokerUrl: String)
+        + start(): void
+        + publishEvent(topic: String, message: String): void
+    }
+
+    class Consumer {
+        - server: HttpServer
+        - brokerUrl: String
+        - port: int
+        + Consumer(brokerUrl: String, port: int)
+        + start(): void
+        + subscribe(topic: String): void
+        + handleEvent(topic: String, message: String): void
+    }
+    class TopicManager {
+        - subscriptions: Map<String, List<String>>
+        + createTopic(topic: String): void
+        + addSubscriber(topic: String, consumerUrl: String): void
+        + getSubscribers(topic: String): List<String>
+    }
+
+    class QueueManager {
+        - queues: Map<String, Queue<String>>
+        + enqueue(topic: String, message: String): void
+        + dequeue(topic: String): String
+        + getQueueSize(topic: String): int
+    }
+
+    class BackpressureHandler {
+        - queueManager: QueueManager
+        + BackpressureHandler(queueManager: QueueManager)
+        + checkLoad(topic: String): boolean
+        + throttle(topic: String): void
+    }
+
+    MessageBroker o-- TopicManager
+    MessageBroker o-- QueueManager
+    MessageBroker o-- BackpressureHandler
+
+    Producer ..> MessageBroker : Publishes events
+    Consumer ..> MessageBroker : Subscribes to topics
+}
+@enduml
