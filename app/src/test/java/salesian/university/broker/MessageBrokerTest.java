@@ -105,7 +105,6 @@ public class MessageBrokerTest {
         JSONObject body = new JSONObject();
         body.put("topic", topic);
         body.put("message", message);
-        body.put("consumerUrl", consumerUrl);
 
         topicManager.createTopic(topic);
         topicManager.addSubscriber(topic, consumerUrl);

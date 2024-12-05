@@ -7,15 +7,9 @@ Asynchronous Event-Driven Messaging System is about to allow multiple producers 
 - Fabian Romero
 - José Luis Terán
 
-Here’s a detailed documentation for the endpoints to include in your README file:
-
-
-
-## Endpoints
-
 ---
 
-## Message Broker
+## Message Broker Endpoints
 
 ---
 
@@ -27,8 +21,6 @@ http://localhost:<PORT>
 
 Replace `<PORT>` with the port number on which the `MessageBroker` server is running.
 
----
-
 ### 1. Create Topic
 **Endpoint:**  
 `POST /createTopic`
@@ -36,22 +28,31 @@ Replace `<PORT>` with the port number on which the `MessageBroker` server is run
 **Description:**  
 Creates a new topic in the message broker. Topics are case-insensitive.
 
-**Request Body:**
-- Plain text containing the name of the topic.
+**Request Body (JSON):**
+```json
+{
+  "topic": "news"
+}
+```
 
 **Response:**
 - **200 OK**: Topic successfully created.
+- **400 Bad Request**: If the JSON payload is invalid.
 - **405 Method Not Allowed**: If a method other than `POST` is used.
 
 **Example:**  
 **Request:**
-```plaintext
-news
+```json
+{
+  "topic": "news"
+}
 ```
 
 **Response:**
-```plaintext
-Topic created successfully
+```json
+{
+  "message": "Topic created successfully"
+}
 ```
 
 ---
@@ -63,24 +64,33 @@ Topic created successfully
 **Description:**  
 Publishes a message to a specified topic. If no subscribers are present, the message will not be delivered.
 
-**Request Body:**
-- A comma-separated string containing:
-    - Topic name
-    - Message content
+**Request Body (JSON):**
+```json
+{
+  "topic": "news",
+  "message": "Today's top headline is..."
+}
+```
 
 **Response:**
 - **200 OK**: Message successfully published.
+- **400 Bad Request**: If the JSON payload is invalid.
 - **405 Method Not Allowed**: If a method other than `POST` is used.
 
 **Example:**  
 **Request:**
-```plaintext
-news,Today's top headline is...
+```json
+{
+  "topic": "news",
+  "message": "Today's top headline is..."
+}
 ```
 
 **Response:**
-```plaintext
-Message published successfully
+```json
+{
+  "message": "Message published successfully"
+}
 ```
 
 ---
@@ -92,24 +102,31 @@ Message published successfully
 **Description:**  
 Subscribes a consumer to a specific topic. The consumer URL will receive messages for the subscribed topic.
 
-**Request Body:**
-- A comma-separated string containing:
-    - Topic name
-    - Consumer URL
+**Request Body (JSON):**
+```json
+{
+  "topic": "news",
+  "consumerUrl": "http://localhost:9000"
+}
+```
 
 **Response:**
 - **200 OK**: Subscription successfully added.
+- **400 Bad Request**: If the JSON payload is invalid.
 - **405 Method Not Allowed**: If a method other than `POST` is used.
 
 **Example:**  
 **Request:**
-```plaintext
-news,http://localhost:9000
+```json
+{
+  "topic": "news",
+  "consumerUrl": "http://localhost:9000"
+}
 ```
 
 **Response:**
-```plaintext
-Subscription added successfully
+```json
+{
+  "message": "Subscription added successfully"
+}
 ```
-
----
