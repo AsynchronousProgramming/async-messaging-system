@@ -1,10 +1,12 @@
 package salesian.university.broker;
 
+import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,22 +30,30 @@ public class MessageBrokerTest {
         messageBroker = null;
     }
 
-    private HttpURLConnection sendPostRequest(String endpoint, String body) throws IOException {
+    private HttpURLConnection sendPostRequest(String endpoint, JSONObject body) throws IOException {
         URL url = new URL("http://localhost:" + PORT + endpoint);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
+
+        connection.setRequestProperty("Content-Type", "application/json");
+
         try (OutputStream os = connection.getOutputStream()) {
-            os.write(body.getBytes());
+            byte[] input = body.toString().getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
         }
+
         return connection;
     }
+
 
     @Test
     void testCreateTopic() throws IOException {
         String topic = "sports";
+        JSONObject body = new JSONObject();
+        body.put("topic", topic);
 
-        HttpURLConnection connection = sendPostRequest("/createTopic", topic);
+        HttpURLConnection connection = sendPostRequest("/createTopic", body);
         int responseCode = connection.getResponseCode();
 
         assertEquals(200, responseCode);
@@ -54,7 +64,9 @@ public class MessageBrokerTest {
     void testPublishWithNoSubscribers() throws IOException {
         String topic = "news";
         String message = "testMessage";
-        String body = topic + "," + message;
+        JSONObject body = new JSONObject();
+        body.put("topic", topic);
+        body.put("message", message);
 
         topicManager.createTopic(topic);
 
@@ -69,7 +81,9 @@ public class MessageBrokerTest {
     void testSubscribe() throws IOException {
         String topic = "football";
         String consumerUrl = "http://localhost:9000";
-        String body = topic + "," + consumerUrl;
+        JSONObject body = new JSONObject();
+        body.put("topic", topic);
+        body.put("consumerUrl", consumerUrl);
 
         topicManager.createTopic(topic);
 
@@ -86,8 +100,12 @@ public class MessageBrokerTest {
     void testPublishWithSubscribers() throws IOException {
         String topic = "programming";
         String message = "testMessage";
-        String body = topic + "," + message;
         String consumerUrl = "http://localhost:9000";
+
+        JSONObject body = new JSONObject();
+        body.put("topic", topic);
+        body.put("message", message);
+        body.put("consumerUrl", consumerUrl);
 
         topicManager.createTopic(topic);
         topicManager.addSubscriber(topic, consumerUrl);

@@ -1,9 +1,11 @@
 package salesian.university.broker;
 
+import org.json.JSONObject;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
 public class MessageBroker {
@@ -14,7 +16,7 @@ public class MessageBroker {
     public MessageBroker(TopicManager topicManager, int port) throws IOException {
         this.topicManager = topicManager;
         this.port = port;
-        this.server = HttpServer.create(new InetSocketAddress(port), 0);
+        server = HttpServer.create(new InetSocketAddress(port), 0);
     }
 
     public MessageBroker(int port) throws IOException {
@@ -22,60 +24,76 @@ public class MessageBroker {
     }
 
     public void start() {
-        configureCreateTopicContext();
-        configurePublishContext();
-        configureSubscribeContext();
+        createTopicContext();
+        publishMessageContext();
+        subscribeContext();
+
         server.start();
         System.out.printf("Message Broker started on port %d%n", port);
     }
 
-    private void configureCreateTopicContext() {
+    private void createTopicContext() {
         server.createContext("/createTopic", exchange -> {
             if ("POST".equals(exchange.getRequestMethod())) {
-                InputStream inputStream = exchange.getRequestBody();
-                String topic = new String(inputStream.readAllBytes()).trim();
-                createTopic(topic);
-                exchange.sendResponseHeaders(200, 0);
+                try (InputStream inputStream = exchange.getRequestBody()) {
+                    String body = new String(inputStream.readAllBytes());
+                    JSONObject requestBody = new JSONObject(body);
+                    String topic = requestBody.getString("topic");
+                    topicManager.createTopic(topic);
+                    sendResponse(exchange, 200, "Topic created successfully");
+                } catch (Exception e) {
+                    sendResponse(exchange, 400, "Invalid request body");
+                }
             } else {
-                exchange.sendResponseHeaders(405, 0);
+                sendResponse(exchange, 405, "Method not allowed");
             }
-            exchange.close();
         });
     }
 
-    private void configurePublishContext() {
+    private void publishMessageContext() {
         server.createContext("/publish", exchange -> {
             if ("POST".equals(exchange.getRequestMethod())) {
-                InputStream inputStream = exchange.getRequestBody();
-                String body = new String(inputStream.readAllBytes());
-                String[] parts = body.split(",", 2);
-                publish(parts[0], parts[1]);
-                exchange.sendResponseHeaders(200, 0);
+                try (InputStream inputStream = exchange.getRequestBody()) {
+                    String body = new String(inputStream.readAllBytes());
+                    JSONObject requestBody = new JSONObject(body);
+                    String topic = requestBody.getString("topic");
+                    String message = requestBody.getString("message");
+                    publish(topic, message);
+                    sendResponse(exchange, 200, "Message published successfully");
+                } catch (Exception e) {
+                    sendResponse(exchange, 400, "Invalid request body");
+                }
             } else {
-                exchange.sendResponseHeaders(405, 0);
+                sendResponse(exchange, 405, "Method not allowed");
             }
-            exchange.close();
         });
     }
 
-    private void configureSubscribeContext() {
+    private void subscribeContext() {
         server.createContext("/subscribe", exchange -> {
             if ("POST".equals(exchange.getRequestMethod())) {
-                InputStream inputStream = exchange.getRequestBody();
-                String body = new String(inputStream.readAllBytes());
-                String[] parts = body.split(",", 2);
-                subscribe(parts[0], parts[1]);
-                exchange.sendResponseHeaders(200, 0);
+                try (InputStream inputStream = exchange.getRequestBody()) {
+                    String body = new String(inputStream.readAllBytes());
+                    JSONObject requestBody = new JSONObject(body);
+                    String topic = requestBody.getString("topic");
+                    String consumerUrl = requestBody.getString("consumerUrl");
+                    subscribe(topic, consumerUrl);
+                    sendResponse(exchange, 200, "Subscription added successfully");
+                } catch (Exception e) {
+                    sendResponse(exchange, 400, "Invalid request body");
+                }
             } else {
-                exchange.sendResponseHeaders(405, 0);
+                sendResponse(exchange, 405, "Method not allowed");
             }
-            exchange.close();
         });
     }
 
-    public void createTopic(String topic) {
-        topicManager.createTopic(topic);
-        System.out.println("Created topic: " + topic);
+    private void sendResponse(com.sun.net.httpserver.HttpExchange exchange, int statusCode, String responseMessage) throws IOException {
+        byte[] responseBytes = responseMessage.getBytes();
+        exchange.sendResponseHeaders(statusCode, responseBytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(responseBytes);
+        }
     }
 
     public void publish(String topic, String message) {
