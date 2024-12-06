@@ -4,8 +4,9 @@ on:
   pull_request:
     branches:
       - '**'
-    branches-ignore:
-      - 'docs/**'
+      - '!chore/lu-07/uml-class-diagram'
+      - '!chore/lu-08/sequence_diagram'
+      - '!docs/**'
 
 jobs:
   build:
