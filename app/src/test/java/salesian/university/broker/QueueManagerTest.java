@@ -20,10 +20,10 @@ class QueueManagerTest {
   }
 
   @Test
-  public void testEnqueueAndDequeue_SingleMessage() throws ExecutionException, InterruptedException {
-    queueManager.enqueue("testTopic", "message1").get();
+  public void testEnqueueAsyncAndDequeueAsync_SingleMessage() throws ExecutionException, InterruptedException {
+    queueManager.enqueueAsync("testTopic", "message1").get();
 
-    Optional<String> dequeuedMessage = queueManager.dequeue("testTopic").get();
+    Optional<String> dequeuedMessage = queueManager.dequeueAsync("testTopic").get();
 
     assertNotNull(dequeuedMessage);
     assertTrue(dequeuedMessage.isPresent());
@@ -31,13 +31,13 @@ class QueueManagerTest {
   }
 
   @Test
-  public void testEnqueueAndDequeue_MultipleMessages() throws ExecutionException, InterruptedException {
-    queueManager.enqueue("testTopic", "message1").get();
-    queueManager.enqueue("testTopic", "message2").get();
+  public void testEnqueueAsyncAndDequeueAsync_MultipleMessages() throws ExecutionException, InterruptedException {
+    queueManager.enqueueAsync("testTopic", "message1").get();
+    queueManager.enqueueAsync("testTopic", "message2").get();
 
-    Optional<String> firstMessage = queueManager.dequeue("testTopic").get();
-    Optional<String> secondMessage = queueManager.dequeue("testTopic").get();
-    Optional<String> thirdMessage = queueManager.dequeue("testTopic").get();
+    Optional<String> firstMessage = queueManager.dequeueAsync("testTopic").get();
+    Optional<String> secondMessage = queueManager.dequeueAsync("testTopic").get();
+    Optional<String> thirdMessage = queueManager.dequeueAsync("testTopic").get();
 
     assertNotNull(firstMessage);
     assertTrue(firstMessage.isPresent());
@@ -52,37 +52,37 @@ class QueueManagerTest {
   }
 
   @Test
-  public void testGetQueueSize_EmptyQueue() throws ExecutionException, InterruptedException {
-    int size = queueManager.getQueueSize("emptyTopic").get();
+  public void testGetQueueSizeAsync_EmptyQueue() throws ExecutionException, InterruptedException {
+    int size = queueManager.getQueueSizeAsync("emptyTopic").get();
 
     assertEquals(0, size);
   }
 
   @Test
-  public void testGetQueueSize_AfterEnqueueAndDequeue() throws ExecutionException, InterruptedException {
-    queueManager.enqueue("testTopic", "message1").get();
-    queueManager.enqueue("testTopic", "message2").get();
-    queueManager.dequeue("testTopic").get();
+  public void testGetQueueSizeAsync_AfterEnqueueAsyncAndDequeueAsync() throws ExecutionException, InterruptedException {
+    queueManager.enqueueAsync("testTopic", "message1").get();
+    queueManager.enqueueAsync("testTopic", "message2").get();
+    queueManager.dequeueAsync("testTopic").get();
 
-    int size = queueManager.getQueueSize("testTopic").get();
+    int size = queueManager.getQueueSizeAsync("testTopic").get();
 
     assertEquals(1, size);
   }
 
   @Test
-  public void testDequeueFromNonExistentTopic() throws ExecutionException, InterruptedException {
-    Optional<String> dequeuedMessage = queueManager.dequeue("nonExistentTopic").get();
+  public void testDequeueAsyncFromNonExistentTopic() throws ExecutionException, InterruptedException {
+    Optional<String> dequeuedMessage = queueManager.dequeueAsync("nonExistentTopic").get();
 
     assertNotNull(dequeuedMessage);
     assertTrue(dequeuedMessage.isEmpty());
   }
 
   @Test
-  public void testDequeueFromEmptyQueue() throws ExecutionException, InterruptedException {
-    queueManager.enqueue("testTopic", "message1").get();
-    queueManager.dequeue("testTopic").get();
+  public void testDequeueAsyncFromEmptyQueue() throws ExecutionException, InterruptedException {
+    queueManager.enqueueAsync("testTopic", "message1").get();
+    queueManager.dequeueAsync("testTopic").get();
 
-    Optional<String> dequeuedMessage = queueManager.dequeue("testTopic").get();
+    Optional<String> dequeuedMessage = queueManager.dequeueAsync("testTopic").get();
 
     assertNotNull(dequeuedMessage);
     assertTrue(dequeuedMessage.isEmpty());
