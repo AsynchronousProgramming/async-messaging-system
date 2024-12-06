@@ -21,11 +21,19 @@ public class Producer {
             body.put("message", message);
             HttpURLConnection connection = httpHelper.sendPostRequest(brokerUrl + "/publish", body);
 
-            System.out.println("Published event: " + message + " to topic: " + topic);
-            connection.getResponseCode();
+            int responseCode = connection.getResponseCode();
+            if(responseCode == 200) {
+                System.out.println("Published event: " + message + " to topic: " + topic);
+            } else {
+                throw new RuntimeException("Failed to subscribe to topic");
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to publish event", e);
         }
+    }
+
+    public static void main(String[] args) {
+//        new Producer().s
     }
 }
 
