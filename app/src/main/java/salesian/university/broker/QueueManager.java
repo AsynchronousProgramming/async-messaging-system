@@ -14,13 +14,13 @@ public class QueueManager {
     this.queues = new ConcurrentHashMap<>();
   }
 
-  public CompletableFuture<Void> enqueue(String topic, String message) {
+  public CompletableFuture<Void> enqueueAsync(String topic, String message) {
     return CompletableFuture.runAsync(() -> {
       queues.computeIfAbsent(topic, k -> new LinkedList<>()).offer(message);
     });
   }
 
-  public CompletableFuture<Optional<String>> dequeue(String topic) {
+  public CompletableFuture<Optional<String>> dequeueAsync(String topic) {
     return CompletableFuture.supplyAsync(() -> {
       Queue<String> queue = queues.get(topic);
       if (queue == null || queue.isEmpty()) {
@@ -30,7 +30,7 @@ public class QueueManager {
     });
   }
 
-  public CompletableFuture<Integer> getQueueSize(String topic) {
+  public CompletableFuture<Integer> getQueueSizeAsync(String topic) {
     return CompletableFuture.supplyAsync(() -> {
       Queue<String> queue = queues.get(topic);
       return queue == null ? 0 : queue.size();
