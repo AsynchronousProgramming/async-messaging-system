@@ -1,8 +1,8 @@
 package salesian.university.broker;
 
-import org.json.JSONObject;
 import com.sun.net.httpserver.HttpServer;
-
+import com.sun.net.httpserver.HttpExchange;
+import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -88,7 +88,7 @@ public class MessageBroker {
         });
     }
 
-    private void sendResponse(com.sun.net.httpserver.HttpExchange exchange, int statusCode, String responseMessage) throws IOException {
+    private void sendResponse(HttpExchange exchange, int statusCode, String responseMessage) throws IOException {
         byte[] responseBytes = responseMessage.getBytes();
         exchange.sendResponseHeaders(statusCode, responseBytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
