@@ -1,19 +1,21 @@
 package salesian.university.broker;
 
 import org.json.JSONObject;
-import org.junit.jupiter.api.*;
-
-import java.io.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MessageBrokerTest {
-
     private MessageBroker messageBroker;
     private TopicManager topicManager;
     private final int PORT = 8082;
@@ -35,7 +37,6 @@ public class MessageBrokerTest {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
-
         connection.setRequestProperty("Content-Type", "application/json");
 
         try (OutputStream os = connection.getOutputStream()) {
