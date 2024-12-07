@@ -1,9 +1,7 @@
 package salesian.university.consumer;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import org.json.JSONObject;
-import salesian.university.helper.HttpHelper;
+import salesian.university.helpers.HttpHelper;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,6 +1,6 @@
 package salesian.university.producer;
 import org.json.JSONObject;
-import salesian.university.helper.HttpHelper;
+import salesian.university.helpers.HttpHelper;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

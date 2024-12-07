@@ -1,4 +1,4 @@
-package salesian.university.helper;
+package salesian.university.helpers;
 
 import org.json.JSONObject;
 
