@@ -5,20 +5,45 @@ import salesian.university.helpers.HttpHelper;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
+/**
+ * This class represents a producer in the message broker system.
+ * <p>
+ * A producer can publish events to specific topics on the message broker.
+ */
 public class Producer {
     private final String brokerUrl;
     private final HttpHelper httpHelper;
 
+    /**
+     * A constructor to create a new producer with the specified broker URL.
+     *
+     * @param brokerUrl the URL of the message broker.
+     */
     public Producer(String brokerUrl) {
         this.brokerUrl = brokerUrl;
         this.httpHelper = new HttpHelper();
     }
 
+    /**
+     * A constructor to create a new producer with the specified
+     * broker URL and HTTP helper.
+     *
+     * @param brokerUrl  the URL of the message broker.
+     * @param httpHelper the helper for handling HTTP requests.
+     */
     public Producer(String brokerUrl, HttpHelper httpHelper) {
         this.brokerUrl = brokerUrl;
         this.httpHelper = httpHelper;
     }
 
+    /**
+     * This method publishes an event to the specified topic
+     * on the message broker.
+     *
+     * @param topic   the topic to publish the event to.
+     * @param message the event message to be published.
+     * @throws RuntimeException if the publication fails.
+     */
     public void publishEvent(String topic, String message) {
         try {
             JSONObject body = new JSONObject();
@@ -37,6 +62,11 @@ public class Producer {
         }
     }
 
+    /**
+     * Main method to run the producer application.
+     *
+     * @param args command-line arguments.
+     */
     public static void main(String[] args) {
         Producer producer = new Producer("http://localhost:8080");
 

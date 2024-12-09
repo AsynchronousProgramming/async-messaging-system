@@ -14,6 +14,14 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * MessageBroker is a custom implementation of a message broker
+ * that facilitates publishing, subscribing, and dispatching messages
+ * between producers and consumers based on topics.
+ * <p>
+ * It supports backpressure handling, asynchronous operations, and a
+ * modular structure for topic management and queue handling.
+ */
 public class MessageBroker {
     private final int port;
     private final HttpServer server;
@@ -23,6 +31,15 @@ public class MessageBroker {
     private final BackpressureHandler backpressureHandler;
     private final ExecutorService executorService;
 
+    /**
+     * A constructor to initialize the MessageBroker with a specified
+     * TopicManager and port.
+     *
+     * @param topicManager The TopicManager instance for managing topics
+     *                     and subscriptions.
+     * @param port         The port on which the broker server will run.
+     * @throws IOException If an error occurs while starting the server.
+     */
     public MessageBroker(TopicManager topicManager, int port) throws IOException {
         this.topicManager = topicManager;
         this.port = port;
@@ -35,10 +52,22 @@ public class MessageBroker {
         new Thread(this::startDispatchingMessages).start();
     }
 
+    /**
+     * A constructor to initialize the MessageBroker with
+     * a default TopicManager and specified port.
+     *
+     * @param port The port on which the broker server will run.
+     * @throws IOException If an error occurs while starting the server.
+     */
     public MessageBroker(int port) throws IOException {
         this(new TopicManager(), port);
     }
 
+    /**
+     * This method starts the HTTP server for the message broker
+     * and sets up contexts for handling topic creation,
+     * publishing messages, and subscribing consumers.
+     */
     public void start() {
         createTopicContext();
         publishMessageContext();
@@ -48,6 +77,11 @@ public class MessageBroker {
         System.out.printf("Message Broker started on port %d%n", port);
     }
 
+    /**
+     * This method creates the HTTP context for handling
+     * topic creation requests.
+     * Listens on the endpoint `/createTopic`.
+     */
     private void createTopicContext() {
         server.createContext("/createTopic", exchange -> handlePostRequest(exchange, body -> {
             String topic = body.getString("topic");
@@ -56,6 +90,11 @@ public class MessageBroker {
         }));
     }
 
+    /**
+     * This method creates the HTTP context for handling
+     * message publishing requests.
+     * Listens on the endpoint `/publish`.
+     */
     private void publishMessageContext() {
         server.createContext("/publish", exchange -> handlePostRequest(exchange, body -> {
             String topic = body.getString("topic");
@@ -65,6 +104,11 @@ public class MessageBroker {
         }));
     }
 
+    /**
+     * This method creates the HTTP context for handling
+     * subscription requests.
+     * Listens on the endpoint `/subscribe`.
+     */
     private void subscribeContext() {
         server.createContext("/subscribe", exchange -> handlePostRequest(exchange, body -> {
             String topic = body.getString("topic");
@@ -74,6 +118,16 @@ public class MessageBroker {
         }));
     }
 
+    /**
+     * This method handles HTTP POST requests for specific
+     * contexts and processes the request body using
+     * the provided handler.
+     *
+     * @param exchange The HttpExchange object representing
+     *                 the HTTP request and response.
+     * @param handler  A functional interface to process the request body.
+     * @throws IOException If an I/O error occurs while handling the request.
+     */
     private void handlePostRequest(HttpExchange exchange, IRequestHandler handler) throws IOException {
         if ("POST".equals(exchange.getRequestMethod())) {
             try (InputStream inputStream = exchange.getRequestBody()) {
@@ -89,6 +143,16 @@ public class MessageBroker {
         }
     }
 
+    /**
+     * This method sends a response to the HTTP client with
+     * a specified status code and message.
+     *
+     * @param exchange         The HttpExchange object representing
+     *                         the HTTP response.
+     * @param statusCode       The HTTP status code to be sent.
+     * @param responseMessage  The message to be included in the response body.
+     * @throws IOException If an I/O error occurs while sending the response.
+     */
     private void sendResponse(HttpExchange exchange, int statusCode, String responseMessage) throws IOException {
         byte[] responseBytes = responseMessage.getBytes();
         exchange.sendResponseHeaders(statusCode, responseBytes.length);
@@ -97,6 +161,14 @@ public class MessageBroker {
         }
     }
 
+    /**
+     * This method publishes a message to a specified topic asynchronously.
+     * If the load on the topic exceeds a threshold,
+     * the backpressure handler throttles publishing.
+     *
+     * @param topic   The name of the topic to publish the message to.
+     * @param message The message to be published.
+     */
     public void publish(String topic, String message) {
         backpressureHandler.checkLoadAsync(topic).thenAccept(isOverloaded -> {
             if (isOverloaded) {
@@ -107,11 +179,24 @@ public class MessageBroker {
         });
     }
 
+    /**
+     * This method subscribes a consumer to a specified topic
+     * by adding the consumer's URL to the list of subscribers
+     * for the topic.
+     *
+     * @param topic       The name of the topic to subscribe to.
+     * @param consumerUrl The URL of the consumer to be subscribed.
+     */
     public void subscribe(String topic, String consumerUrl) {
         topicManager.addSubscriber(topic, consumerUrl);
         System.out.println("Added subscriber: " + consumerUrl + " to topic: " + topic);
     }
 
+    /**
+     * This method starts dispatching messages from queues
+     * to subscribers asynchronously.
+     * Runs in a continuous loop and processes messages for each topic.
+     */
     private void startDispatchingMessages() {
         while (true) {
             try {
@@ -134,6 +219,13 @@ public class MessageBroker {
         }
     }
 
+    /**
+     * This method sends a message to a specific subscriber
+     * by making an HTTP POST request.
+     *
+     * @param subscriber The URL of the subscriber to send the message to.
+     * @param message    The message to be sent to the subscriber.
+     */
     private void sendMessageToSubscriber(String subscriber, String message) {
         try {
             JSONObject messageBody = new JSONObject();
@@ -145,6 +237,14 @@ public class MessageBroker {
         }
     }
 
+    /**
+     * The main entry point for running the MessageBroker.
+     * Initializes the broker, creates default topics, and starts the server.
+     *
+     * @param args Command-line arguments (not used).
+     * @throws IOException          If an error occurs while initializing the broker.
+     * @throws InterruptedException If the thread is interrupted while sleeping.
+     */
     public static void main(String[] args) throws IOException, InterruptedException {
         new MessageBroker(8080).start();
         HttpHelper httpHelper = new HttpHelper();
