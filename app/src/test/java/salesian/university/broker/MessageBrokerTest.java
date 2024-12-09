@@ -52,7 +52,6 @@ public class MessageBrokerTest {
         return connection;
     }
 
-
     @Test
     void testCreateTopic() throws IOException {
         String topic = "sports";
