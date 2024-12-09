@@ -40,8 +40,13 @@ public class Producer {
     public static void main(String[] args) {
         Producer producer = new Producer("http://localhost:8080");
 
-        producer.publishEvent("sports", "Message 1 for sports");
+        producer.publishEvent("sports", "Initial message for sports");
         producer.publishEvent("news", "Message 1 for news");
         producer.publishEvent("science", "Message 2 for science");
+
+        for (int i = 0; i < 200; i++) {
+            String message = "Message " + (i + 1) + " for sports";
+            producer.publishEvent("sports", message);
+        }
     }
 }

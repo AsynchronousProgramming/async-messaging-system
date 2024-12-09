@@ -31,4 +31,8 @@ public class TopicManager {
     public List<String> getSubscribers(String topic) {
         return subscriptions.getOrDefault(stringManager.getLowerCaseString(topic), Collections.emptyList());
     }
+
+    public List<String> getTopics() {
+        return new ArrayList<>(subscriptions.keySet());
+    }
 }
