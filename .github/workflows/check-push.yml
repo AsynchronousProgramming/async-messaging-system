@@ -72,6 +72,6 @@ jobs:
         with:
           regex: '([a-z]+)/([a-z]+)'
           allowed_prefixes: 'feature,bugfix,hotfix,build,ci,docs,chore,stable,refactor,perf,'
-          ignore: main,release,develop,test
+          ignore: main,develop,test
           min_length: 4
           max_length: 100
