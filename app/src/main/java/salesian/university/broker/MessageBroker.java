@@ -74,7 +74,7 @@ public class MessageBroker {
         }));
     }
 
-    private void handlePostRequest(HttpExchange exchange, RequestHandler handler) throws IOException {
+    private void handlePostRequest(HttpExchange exchange, IRequestHandler handler) throws IOException {
         if ("POST".equals(exchange.getRequestMethod())) {
             try (InputStream inputStream = exchange.getRequestBody()) {
                 String body = new String(inputStream.readAllBytes());
@@ -143,11 +143,6 @@ public class MessageBroker {
         } catch (IOException e) {
             System.err.println("Failed to send message to subscriber: " + subscriber);
         }
-    }
-
-    @FunctionalInterface
-    private interface RequestHandler {
-        String handle(JSONObject body) throws Exception;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {

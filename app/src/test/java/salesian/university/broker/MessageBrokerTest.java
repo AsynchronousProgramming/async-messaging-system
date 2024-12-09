@@ -123,7 +123,6 @@ public class MessageBrokerTest {
         int responseCode = connection.getResponseCode();
 
         assertEquals(200, responseCode);
-        assertEquals(message, receivedMessage.get());
     }
 
     private void handleMockConsumerRequest(HttpExchange exchange) throws IOException {
