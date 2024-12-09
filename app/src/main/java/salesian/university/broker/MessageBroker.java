@@ -11,18 +11,28 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MessageBroker {
     private final int port;
     private final HttpServer server;
     private final TopicManager topicManager;
     private final HttpHelper httpHelper;
+    private final QueueManager queueManager;
+    private final BackpressureHandler backpressureHandler;
+    private final ExecutorService executorService;
 
     public MessageBroker(TopicManager topicManager, int port) throws IOException {
         this.topicManager = topicManager;
         this.port = port;
         this.httpHelper = new HttpHelper();
+        this.queueManager = new QueueManager();
+        this.backpressureHandler = new BackpressureHandler(queueManager);
+        this.executorService = Executors.newCachedThreadPool();
         server = HttpServer.create(new InetSocketAddress(port), 0);
+
+        new Thread(this::startDispatchingMessages).start();
     }
 
     public MessageBroker(int port) throws IOException {
@@ -39,35 +49,29 @@ public class MessageBroker {
     }
 
     private void createTopicContext() {
-        server.createContext("/createTopic", exchange -> {
-            handlePostRequest(exchange, body -> {
-                String topic = body.getString("topic");
-                topicManager.createTopic(topic);
-                return "Topic " + topic + " created successfully";
-            });
-        });
+        server.createContext("/createTopic", exchange -> handlePostRequest(exchange, body -> {
+            String topic = body.getString("topic");
+            topicManager.createTopic(topic);
+            return "Topic " + topic + " created successfully";
+        }));
     }
 
     private void publishMessageContext() {
-        server.createContext("/publish", exchange -> {
-            handlePostRequest(exchange, body -> {
-                String topic = body.getString("topic");
-                String message = body.getString("message");
-                publish(topic, message);
-                return "Message published successfully";
-            });
-        });
+        server.createContext("/publish", exchange -> handlePostRequest(exchange, body -> {
+            String topic = body.getString("topic");
+            String message = body.getString("message");
+            publish(topic, message);
+            return "Message published successfully";
+        }));
     }
 
     private void subscribeContext() {
-        server.createContext("/subscribe", exchange -> {
-            handlePostRequest(exchange, body -> {
-                String topic = body.getString("topic");
-                String consumerUrl = body.getString("consumerUrl");
-                subscribe(topic, consumerUrl);
-                return "Subscription added successfully";
-            });
-        });
+        server.createContext("/subscribe", exchange -> handlePostRequest(exchange, body -> {
+            String topic = body.getString("topic");
+            String consumerUrl = body.getString("consumerUrl");
+            subscribe(topic, consumerUrl);
+            return "Subscription added successfully";
+        }));
     }
 
     private void handlePostRequest(HttpExchange exchange, RequestHandler handler) throws IOException {
@@ -94,27 +98,51 @@ public class MessageBroker {
     }
 
     public void publish(String topic, String message) {
-        List<String> subscribers = topicManager.getSubscribers(topic);
-        if (subscribers.isEmpty()) {
-            System.out.println("No subscribers for topic: " + topic);
-        } else {
-            for (String subscriber : subscribers) {
-                try {
-                    JSONObject messageBody = new JSONObject();
-                    messageBody.put("message", message);
-                    HttpURLConnection response = httpHelper.sendPostRequest(subscriber + "/receive", messageBody);
-                    System.out.println("Sent message to subscriber: " + subscriber + " with status: " + response.getResponseCode());
-                } catch (IOException e) {
-                    System.err.println("Failed to send message to subscriber: " + subscriber);
-                    System.out.println(e.getMessage());
-                }
+        backpressureHandler.checkLoadAsync(topic).thenAccept(isOverloaded -> {
+            if (isOverloaded) {
+                backpressureHandler.throttleAsync(topic).join();
             }
-        }
+            queueManager.enqueueAsync(topic, message).thenRun(() ->
+                    System.out.println("Message enqueued for topic: " + topic));
+        });
     }
 
     public void subscribe(String topic, String consumerUrl) {
         topicManager.addSubscriber(topic, consumerUrl);
         System.out.println("Added subscriber: " + consumerUrl + " to topic: " + topic);
+    }
+
+    private void startDispatchingMessages() {
+        while (true) {
+            try {
+                for (String topic : topicManager.getTopics()) {
+                    queueManager.dequeueAsync(topic).thenAccept(optionalMessage -> {
+                        optionalMessage.ifPresent(message -> {
+                            List<String> subscribers = topicManager.getSubscribers(topic);
+                            for (String subscriber : subscribers) {
+                                executorService.submit(() -> sendMessageToSubscriber(subscriber, message));
+                            }
+                        });
+                    }).join();
+                }
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.err.println("Message dispatch thread interrupted");
+                break;
+            }
+        }
+    }
+
+    private void sendMessageToSubscriber(String subscriber, String message) {
+        try {
+            JSONObject messageBody = new JSONObject();
+            messageBody.put("message", message);
+            HttpURLConnection response = httpHelper.sendPostRequest(subscriber + "/receive", messageBody);
+            System.out.println("Sent message to subscriber: " + subscriber + " with status: " + response.getResponseCode());
+        } catch (IOException e) {
+            System.err.println("Failed to send message to subscriber: " + subscriber);
+        }
     }
 
     @FunctionalInterface
