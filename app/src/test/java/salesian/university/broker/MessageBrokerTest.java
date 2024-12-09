@@ -1,5 +1,7 @@
 package salesian.university.broker;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -8,9 +10,12 @@ import org.junit.jupiter.api.TestInstance;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -19,6 +24,7 @@ public class MessageBrokerTest {
     private MessageBroker messageBroker;
     private TopicManager topicManager;
     private final int PORT = 8082;
+    private final AtomicReference<String> receivedMessage = new AtomicReference<>();
 
     @BeforeAll
     void setUp() throws IOException {
@@ -46,7 +52,6 @@ public class MessageBrokerTest {
 
         return connection;
     }
-
 
     @Test
     void testCreateTopic() throws IOException {
@@ -99,9 +104,13 @@ public class MessageBrokerTest {
 
     @Test
     void testPublishWithSubscribers() throws IOException {
+        HttpServer mockConsumerServer = HttpServer.create(new InetSocketAddress(9004), 0);
+        mockConsumerServer.createContext("/", this::handleMockConsumerRequest);
+        mockConsumerServer.start();
+
         String topic = "programming";
         String message = "testMessage";
-        String consumerUrl = "http://localhost:9000";
+        String consumerUrl = "http://localhost:9004";
 
         JSONObject body = new JSONObject();
         body.put("topic", topic);
@@ -114,8 +123,20 @@ public class MessageBrokerTest {
         int responseCode = connection.getResponseCode();
 
         assertEquals(200, responseCode);
-        List<String> subscribers = topicManager.getSubscribers(topic);
-        assertEquals(1, subscribers.size());
+        assertEquals(message, receivedMessage.get());
+    }
+
+    private void handleMockConsumerRequest(HttpExchange exchange) throws IOException {
+        if ("POST".equals(exchange.getRequestMethod())) {
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject jsonObject = new JSONObject(body);
+            receivedMessage.set(jsonObject.getString("message"));
+            exchange.sendResponseHeaders(200, 0);
+            exchange.getResponseBody().close();
+        } else {
+            exchange.sendResponseHeaders(405, 0);
+            exchange.getResponseBody().close();
+        }
     }
 
     @Test
