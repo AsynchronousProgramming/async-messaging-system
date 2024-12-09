@@ -1,0 +1,35 @@
+@startuml
+
+actor Producer
+participant "Message Broker" as Broker
+participant Queue
+actor Consumer
+
+Producer -> Broker: Send message
+Broker -> Broker: Validate queue/topic
+
+alt Queue exists
+    Broker -> Broker: Apply backpressure (if needed)
+    Broker -> Queue: Enqueue message
+    Queue -> Broker: Confirm enqueue
+    Broker -> Producer: Acknowledge message stored
+else Queue does not exist
+    Broker -> Producer: Return error (Queue not found)
+end
+
+== Consumer Processing ==
+
+Broker -> Queue: Dequeue message
+Queue --> Broker: Message
+Broker -> Consumer: Deliver message
+Consumer -> Consumer: Process message (asynchronously)
+
+alt Success
+    Consumer -> Broker: Acknowledge message
+    Broker -> Queue: Remove message
+else Failure
+    Consumer -> Broker: Negative acknowledgment (NACK)
+    Broker -> Queue: Requeue message
+end
+
+@enduml
