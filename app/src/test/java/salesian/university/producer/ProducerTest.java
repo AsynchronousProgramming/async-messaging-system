@@ -72,7 +72,7 @@ class ProducerTest {
 
                     @Override
                     public int getResponseCode() {
-                        return 400; // Simulating a failure response
+                        return 400;
                     }
                 };
             }
