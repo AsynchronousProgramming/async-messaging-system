@@ -43,7 +43,7 @@ public class MessageBroker {
             handlePostRequest(exchange, body -> {
                 String topic = body.getString("topic");
                 topicManager.createTopic(topic);
-                return "Topic created successfully";
+                return "Topic " + topic + " created successfully";
             });
         });
     }
@@ -102,7 +102,7 @@ public class MessageBroker {
                 try {
                     JSONObject messageBody = new JSONObject();
                     messageBody.put("message", message);
-                    HttpURLConnection response = httpHelper.sendPostRequest(subscriber, messageBody);
+                    HttpURLConnection response = httpHelper.sendPostRequest(subscriber + "/receive", messageBody);
                     System.out.println("Sent message to subscriber: " + subscriber + " with status: " + response.getResponseCode());
                 } catch (IOException e) {
                     System.err.println("Failed to send message to subscriber: " + subscriber);
@@ -117,12 +117,25 @@ public class MessageBroker {
         System.out.println("Added subscriber: " + consumerUrl + " to topic: " + topic);
     }
 
-    public static void main(String[] args) throws IOException {
-        new MessageBroker(8080).start();
-    }
-
     @FunctionalInterface
     private interface RequestHandler {
         String handle(JSONObject body) throws Exception;
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        new MessageBroker(8080).start();
+        HttpHelper httpHelper = new HttpHelper();
+        JSONObject bodyTopic = new JSONObject();
+
+        Thread.sleep(1000);
+        bodyTopic.put("topic", "sports");
+        HttpURLConnection response = httpHelper.sendPostRequest("http://localhost:8080/createTopic", bodyTopic);
+        System.out.println(response.getResponseMessage());
+        bodyTopic.put("topic", "news");
+        response = httpHelper.sendPostRequest("http://localhost:8080/createTopic", bodyTopic);
+        System.out.println(response.getResponseMessage());
+        bodyTopic.put("topic", "science");
+        response = httpHelper.sendPostRequest("http://localhost:8080/createTopic", bodyTopic);
+        System.out.println(response.getResponseMessage());
     }
 }

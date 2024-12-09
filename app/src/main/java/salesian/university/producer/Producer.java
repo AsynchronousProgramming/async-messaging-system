@@ -30,10 +30,23 @@ public class Producer {
             if(responseCode == 200) {
                 System.out.println("Published event: " + message + " to topic: " + topic);
             } else {
-                throw new RuntimeException("Failed to subscribe to topic");
+                throw new RuntimeException("Failed to publish to topic");
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to publish event", e);
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            Producer producer = new Producer("http://localhost:8080");
+
+            producer.publishEvent("sports", "Message 1 for sports");
+            producer.publishEvent("news", "Message 1 for news");
+            producer.publishEvent("science", "Message 2 for science");
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

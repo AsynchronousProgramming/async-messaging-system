@@ -35,7 +35,7 @@ public class Consumer {
 
             int responseCode = connection.getResponseCode();
             if(responseCode == 200) {
-                System.out.println("Subscribed to topic: " + topic);
+                System.out.println(consumerUrl + " consumer subscribed to topic: " + topic);
             } else {
                 throw new RuntimeException("Failed to subscribe to topic");
             }
@@ -56,14 +56,32 @@ public class Consumer {
             });
 
             server.start();
-            System.out.println("Consumer server started on port 8081");
+            System.out.println("Consumer server started on port " + port);
         } catch (IOException e) {
             throw new RuntimeException("Failed to start consumer server", e);
         }
     }
 
     public void handleEvent(String message) {
-        System.out.println("Received message: " + message);
+        System.out.println("Received message: " + message + ", Consumer: " + consumerUrl);
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        Consumer consumer1 = new Consumer("http://localhost:8080", 9002);
+        new Thread(consumer1::start).start();
+
+        Consumer consumer2 = new Consumer("http://localhost:8080", 9003);
+        new Thread(consumer2::start).start();
+
+        Consumer consumer3 = new Consumer("http://localhost:8080", 9004);
+        new Thread(consumer3::start).start();
+
+        Thread.sleep(3000);
+
+        consumer1.subscribe("sports");
+        consumer2.subscribe("sports");
+        consumer2.subscribe("news");
+        consumer3.subscribe("science");
     }
 }
 
