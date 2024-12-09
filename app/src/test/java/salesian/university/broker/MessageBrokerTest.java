@@ -24,6 +24,7 @@ public class MessageBrokerTest {
     private MessageBroker messageBroker;
     private TopicManager topicManager;
     private final int PORT = 8082;
+    private final AtomicReference<String> receivedMessage = new AtomicReference<>();
 
     @BeforeAll
     void setUp() throws IOException {
@@ -101,8 +102,6 @@ public class MessageBrokerTest {
         assertTrue(subscribers.contains(consumerUrl));
     }
 
-    private final AtomicReference<String> receivedMessage = new AtomicReference<>();
-
     @Test
     void testPublishWithSubscribers() throws IOException {
         HttpServer mockConsumerServer = HttpServer.create(new InetSocketAddress(9004), 0);
@@ -139,7 +138,6 @@ public class MessageBrokerTest {
             exchange.getResponseBody().close();
         }
     }
-
 
     @Test
     void testInvalidMethod() throws IOException {

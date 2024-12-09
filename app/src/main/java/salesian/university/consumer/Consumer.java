@@ -84,4 +84,3 @@ public class Consumer {
         consumer3.subscribe("science");
     }
 }
-

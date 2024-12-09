@@ -38,16 +38,10 @@ public class Producer {
     }
 
     public static void main(String[] args) {
-        try {
-            Producer producer = new Producer("http://localhost:8080");
+        Producer producer = new Producer("http://localhost:8080");
 
-            producer.publishEvent("sports", "Message 1 for sports");
-            producer.publishEvent("news", "Message 1 for news");
-            producer.publishEvent("science", "Message 2 for science");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        producer.publishEvent("sports", "Message 1 for sports");
+        producer.publishEvent("news", "Message 1 for news");
+        producer.publishEvent("science", "Message 2 for science");
     }
 }
-
