@@ -14,6 +14,11 @@ public class Producer {
         this.httpHelper = new HttpHelper();
     }
 
+    public Producer(String brokerUrl, HttpHelper httpHelper) {
+        this.brokerUrl = brokerUrl;
+        this.httpHelper = httpHelper;
+    }
+
     public void publishEvent(String topic, String message) {
         try {
             JSONObject body = new JSONObject();
@@ -30,10 +35,6 @@ public class Producer {
         } catch (IOException e) {
             throw new RuntimeException("Failed to publish event", e);
         }
-    }
-
-    public static void main(String[] args) {
-//        new Producer().s
     }
 }
 

@@ -12,13 +12,18 @@ public class Consumer {
     private final int port;
     private final String brokerUrl;
     private final String consumerUrl;
-    private final HttpHelper httpHelper;
+    private HttpHelper httpHelper;
 
     public Consumer(String brokerUrl, int port) {
         this.brokerUrl = brokerUrl;
         this.port = port;
         this.consumerUrl = "http://localhost:" + port;
         this.httpHelper = new HttpHelper();
+    }
+
+    public Consumer(String brokerUrl, int port, HttpHelper httpHelper){
+        this(brokerUrl, port);
+        this.httpHelper = httpHelper;
     }
 
     public void subscribe(String topic) {
