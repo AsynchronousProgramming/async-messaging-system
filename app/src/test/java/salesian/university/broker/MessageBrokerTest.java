@@ -104,13 +104,13 @@ public class MessageBrokerTest {
 
     @Test
     void testPublishWithSubscribers() throws IOException {
-        HttpServer mockConsumerServer = HttpServer.create(new InetSocketAddress(9004), 0);
+        HttpServer mockConsumerServer = HttpServer.create(new InetSocketAddress(9009), 0);
         mockConsumerServer.createContext("/", this::handleMockConsumerRequest);
         mockConsumerServer.start();
 
         String topic = "programming";
         String message = "testMessage";
-        String consumerUrl = "http://localhost:9004";
+        String consumerUrl = "http://localhost:9009";
 
         JSONObject body = new JSONObject();
         body.put("topic", topic);

@@ -100,7 +100,7 @@ public class MessageBroker {
     public void publish(String topic, String message) {
         backpressureHandler.checkLoadAsync(topic).thenAccept(isOverloaded -> {
             if (isOverloaded) {
-                backpressureHandler.throttleAsync(topic).join(); // Throttle before enqueueing
+                backpressureHandler.throttleAsync(topic).join();
             }
             queueManager.enqueueAsync(topic, message).thenRun(() ->
                     System.out.println("Message enqueued for topic: " + topic));
